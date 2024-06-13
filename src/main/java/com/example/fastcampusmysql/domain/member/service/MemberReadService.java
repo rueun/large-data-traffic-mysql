@@ -1,7 +1,6 @@
 package com.example.fastcampusmysql.domain.member.service;
 
 import com.example.fastcampusmysql.domain.member.dto.MemberDto;
-import com.example.fastcampusmysql.domain.member.dto.RegisterMemberCommand;
 import com.example.fastcampusmysql.domain.member.entity.Member;
 import com.example.fastcampusmysql.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,19 +8,14 @@ import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
-public class MemberWriteService {
+public class MemberReadService {
 
     private final MemberRepository memberRepository;
 
-    public MemberDto register(final RegisterMemberCommand command) {
+    public MemberDto findById(final Long id) {
+        final Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
 
-
-        final Member member = Member.builder()
-                .email(command.email())
-                .nickname(command.nickname())
-                .birthday(command.birthday())
-                .build();
-
-        return MemberDto.of(memberRepository.save(member));
+        return MemberDto.of(member);
     }
 }
