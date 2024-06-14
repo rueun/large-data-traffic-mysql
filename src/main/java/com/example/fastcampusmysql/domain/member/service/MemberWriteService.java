@@ -15,7 +15,6 @@ public class MemberWriteService {
 
     public MemberDto register(final RegisterMemberCommand command) {
 
-
         final Member member = Member.builder()
                 .email(command.email())
                 .nickname(command.nickname())
@@ -24,4 +23,5 @@ public class MemberWriteService {
 
         return MemberDto.of(memberRepository.save(member));
     }
+
 }
