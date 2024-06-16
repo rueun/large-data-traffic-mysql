@@ -3,6 +3,8 @@ package com.example.fastcampusmysql.domain.member.service;
 import com.example.fastcampusmysql.domain.member.dto.MemberDto;
 import com.example.fastcampusmysql.domain.member.dto.RegisterMemberCommand;
 import com.example.fastcampusmysql.domain.member.entity.Member;
+import com.example.fastcampusmysql.domain.member.entity.MemberNicknameHistory;
+import com.example.fastcampusmysql.domain.member.repository.MemberNicknameRepository;
 import com.example.fastcampusmysql.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 public class MemberWriteService {
 
     private final MemberRepository memberRepository;
+    private final MemberNicknameRepository memberNicknameRepository;
 
     public MemberDto register(final RegisterMemberCommand command) {
 
@@ -21,7 +24,9 @@ public class MemberWriteService {
                 .birthday(command.birthday())
                 .build();
 
-        return MemberDto.of(memberRepository.save(member));
+        final Member savedMember = memberRepository.save(member);
+        saveMemberNicknameHistory(savedMember);
+        return MemberDto.of(savedMember);
     }
     
     public void changeNickname(final Long id, final String newNickname) {
@@ -31,7 +36,15 @@ public class MemberWriteService {
         member.changeNickname(newNickname);
         memberRepository.save(member);
 
-        // TODO: 2024-06-16 닉네임 변경 히스토리 저장 
+        saveMemberNicknameHistory(member);
+    }
+
+    private void saveMemberNicknameHistory(final Member member) {
+        final MemberNicknameHistory history = MemberNicknameHistory.builder()
+                .memberId(member.getId())
+                .nickname(member.getNickname())
+                .build();
+        memberNicknameRepository.save(history);
     }
 
 }
