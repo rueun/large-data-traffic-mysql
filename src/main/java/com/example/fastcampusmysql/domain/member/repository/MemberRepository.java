@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -17,6 +18,14 @@ import java.util.Optional;
 public class MemberRepository {
 
     private static final String TABLE_NAME = "member";
+
+    private static final RowMapper<Member> ROW_MAPPER = (rs, rowNum) -> Member.builder()
+            .id(rs.getLong("id"))
+            .email(rs.getString("email"))
+            .nickname(rs.getString("nickname"))
+            .birthday(rs.getDate("birthday").toLocalDate())
+            .createdAt(rs.getTimestamp("createdAt").toLocalDateTime())
+            .build();
 
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
@@ -26,15 +35,9 @@ public class MemberRepository {
         MapSqlParameterSource parameterSource = new MapSqlParameterSource()
                 .addValue("id", id);
 
-        RowMapper<Member> rowMapper = (rs, rowNum) -> Member.builder()
-                .id(rs.getLong("id"))
-                .email(rs.getString("email"))
-                .nickname(rs.getString("nickname"))
-                .birthday(rs.getDate("birthday").toLocalDate())
-                .createdAt(rs.getTimestamp("createdAt").toLocalDateTime())
-                .build();
 
-        final Member member = namedParameterJdbcTemplate.queryForObject(sql, parameterSource, rowMapper);
+
+        final Member member = namedParameterJdbcTemplate.queryForObject(sql, parameterSource, ROW_MAPPER);
         return Optional.ofNullable(member);
     }
 
@@ -66,5 +69,17 @@ public class MemberRepository {
         final SqlParameterSource parameterSource = new BeanPropertySqlParameterSource(member);
         namedParameterJdbcTemplate.update(sql, parameterSource);
         return member;
+    }
+
+    public List<Member> findAllByIdIn(final List<Long> memberIds) {
+        if (memberIds.isEmpty()) {
+            return List.of();
+        }
+
+        final String sql = String.format("SELECT * FROM %s WHERE id IN (:memberIds)", TABLE_NAME);
+        final SqlParameterSource parameterSource = new MapSqlParameterSource()
+                .addValue("memberIds", memberIds);
+
+        return namedParameterJdbcTemplate.query(sql, parameterSource, ROW_MAPPER);
     }
 }
