@@ -23,5 +23,15 @@ public class MemberWriteService {
 
         return MemberDto.of(memberRepository.save(member));
     }
+    
+    public void changeNickname(final Long id, final String newNickname) {
+        final Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 회원이 존재하지 않습니다."));
+
+        member.changeNickname(newNickname);
+        memberRepository.save(member);
+
+        // TODO: 2024-06-16 닉네임 변경 히스토리 저장 
+    }
 
 }

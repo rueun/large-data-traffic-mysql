@@ -25,4 +25,13 @@ public class MemberController {
     public MemberDto register(@RequestBody final RegisterMemberCommand command) {
         return memberWriteService.register(command);
     }
+
+    @PutMapping("/members/{id}/nickname")
+    public MemberDto changeNickname(
+            @PathVariable("id") final Long id,
+            @RequestBody final String newNickname
+    ) {
+        memberWriteService.changeNickname(id, newNickname);
+        return memberReadService.findById(id);
+    }
 }

@@ -61,8 +61,10 @@ public class MemberRepository {
                 .build();
     }
 
-    private Member update(Member member) {
-        // TODO: 2024-06-13 member를 갱신
+    private Member update(final Member member) {
+        final String sql = String.format("UPDATE %s SET email = :email, nickname = :nickname, birthday = :birthday WHERE id = :id", TABLE_NAME);
+        final SqlParameterSource parameterSource = new BeanPropertySqlParameterSource(member);
+        namedParameterJdbcTemplate.update(sql, parameterSource);
         return member;
     }
 }
