@@ -17,8 +17,9 @@ import java.util.List;
 @Repository
 public class PostRepository {
 
-    final static String TABLE_NAME = "post";
-    private final static RowMapper<DailyPostCount> DAILY_POST_COUNT_ROW_MAPPER = (rs, rowNum) -> new DailyPostCount(
+    static final String TABLE_NAME = "post";
+
+    private static final RowMapper<DailyPostCount> DAILY_POST_COUNT_ROW_MAPPER = (rs, rowNum) -> new DailyPostCount(
             rs.getLong("memberId"),
             rs.getDate("createdDate").toLocalDate(),
             rs.getLong("COUNT(id)")
@@ -31,6 +32,19 @@ public class PostRepository {
             return insert(post);
         }
         return update(post);
+    }
+
+    public void bulkInsert(List<Post> posts) {
+        String sql = String.format("""
+                INSERT INTO %s (memberId, contents, createdDate, createdAt)
+                VALUES (:memberId, :contents, :createdDate, :createdAt)
+                """, TABLE_NAME);
+
+        SqlParameterSource[] batch = posts.stream()
+                .map(BeanPropertySqlParameterSource::new)
+                .toArray(SqlParameterSource[]::new);
+
+        namedParameterJdbcTemplate.batchUpdate(sql, batch);
     }
 
     private Post insert(Post post) {
