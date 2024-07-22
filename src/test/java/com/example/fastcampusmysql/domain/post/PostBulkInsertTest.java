@@ -22,8 +22,8 @@ class PostBulkInsertTest {
 
     @Test
     void bulkInsert() {
-        final EasyRandom easyRandom = PostFixtureFactory.get(3L,
-                LocalDate.of(2024, 6, 1),
+        final EasyRandom easyRandom = PostFixtureFactory.get(4L,
+                LocalDate.of(1970, 6, 1),
                 LocalDate.of(2024, 7, 1));
 
         final StopWatch stopWatch = new StopWatch();
