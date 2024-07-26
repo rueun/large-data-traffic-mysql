@@ -95,6 +95,39 @@ public class PostRepository {
         return namedParameterJdbcTemplate.query(sql, parameterSource, DAILY_POST_COUNT_ROW_MAPPER);
     }
 
+    public Page<Post> findAllByMemberId(final Long memberId, final Pageable pageable) {
+
+        final String sql = String.format("""
+                    SELECT *
+                    FROM %s
+                    WHERE memberId = :memberId
+                    ORDER BY %s
+                    LIMIT :size
+                    OFFSET :offset
+                """, TABLE_NAME, PageHelper.orderBy(pageable.getSort()));
+
+        final SqlParameterSource parameterSource = new MapSqlParameterSource()
+                .addValue("memberId", memberId)
+                .addValue("size", pageable.getPageSize())
+                .addValue("offset", pageable.getOffset());
+
+        final List<Post> query = namedParameterJdbcTemplate.query(sql, parameterSource, POST_ROW_MAPPER);
+        return new PageImpl<>(query, pageable, getCount(memberId));
+    }
+
+    private Long getCount(final Long memberId) {
+        final String sql = String.format("""
+                SELECT COUNT(id)
+                FROM %s
+                WHERE memberId = :memberId
+                """, TABLE_NAME);
+
+        final SqlParameterSource parameterSource = new MapSqlParameterSource()
+                .addValue("memberId", memberId);
+
+        return namedParameterJdbcTemplate.queryForObject(sql, parameterSource, Long.class);
+    }
+
     public List<Post> findAllByMemberIdAndOrderByIdDesc(final Long memberId, final int size) {
 
         final String sql = String.format("""
@@ -130,36 +163,44 @@ public class PostRepository {
         return namedParameterJdbcTemplate.query(sql, parameterSource, POST_ROW_MAPPER);
     }
 
-    public Page<Post> findAllByMemberId(final Long memberId, final Pageable pageable) {
+    public List<Post> findAllByInMemberIdAndOrderByIdDesc(final List<Long> memberIds, final int size) {
+        if (memberIds.isEmpty()) {
+            return List.of();
+        }
 
         final String sql = String.format("""
                     SELECT *
                     FROM %s
-                    WHERE memberId = :memberId
-                    ORDER BY %s
+                    WHERE memberId in (:memberIds)
+                    ORDER BY id DESC
                     LIMIT :size
-                    OFFSET :offset
-                """, TABLE_NAME, PageHelper.orderBy(pageable.getSort()));
-
-        final SqlParameterSource parameterSource = new MapSqlParameterSource()
-                .addValue("memberId", memberId)
-                .addValue("size", pageable.getPageSize())
-                .addValue("offset", pageable.getOffset());
-
-        final List<Post> query = namedParameterJdbcTemplate.query(sql, parameterSource, POST_ROW_MAPPER);
-        return new PageImpl<>(query, pageable, getCount(memberId));
-    }
-
-    private Long getCount(final Long memberId) {
-        final String sql = String.format("""
-                SELECT COUNT(id)
-                FROM %s
-                WHERE memberId = :memberId
                 """, TABLE_NAME);
 
         final SqlParameterSource parameterSource = new MapSqlParameterSource()
-                .addValue("memberId", memberId);
+                .addValue("memberIds", memberIds)
+                .addValue("size", size);
 
-        return namedParameterJdbcTemplate.queryForObject(sql, parameterSource, Long.class);
+        return namedParameterJdbcTemplate.query(sql, parameterSource, POST_ROW_MAPPER);
+    }
+
+    public List<Post> findAllByLessThanIdAndInMemberIdAndOrderByIdDesc(final Long id, final List<Long> memberIds, final int size) {
+        if (memberIds.isEmpty()) {
+            return List.of();
+        }
+
+        final String sql = String.format("""
+                    SELECT *
+                    FROM %s
+                    WHERE memberId in (:memberIds) and id < :id
+                    ORDER BY id DESC
+                    LIMIT :size
+                """, TABLE_NAME);
+
+        final SqlParameterSource parameterSource = new MapSqlParameterSource()
+                .addValue("memberIds", memberIds)
+                .addValue("id", id)
+                .addValue("size", size);
+
+        return namedParameterJdbcTemplate.query(sql, parameterSource, POST_ROW_MAPPER);
     }
 }
